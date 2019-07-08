@@ -3,7 +3,7 @@
 */
 
 import {reqAddress,reqShops,reqCatorgorys} from '../api/index'
-import {RECEIVE_ADDRESS,RECEIVE_SHOPS,RECEIVE_GATEGORGRYS} from './mutation-types'
+import {RECEIVE_ADDRESS,RECEIVE_SHOPS,RECEIVE_GATEGORGRYS,RECEIVE_USER,RESET_USER} from './mutation-types'
 export default {
   async reqAddress({commit,state}){
     const {latitude,longitude} = state
@@ -28,4 +28,27 @@ export default {
       commit(RECEIVE_SHOPS,shops)
     }
   },
+  /* 
+  记录user:
+  持久化保存token
+  在state中保存user
+  */
+ recordUser({commit},user){
+   //将user的taken保存到cocalstorage中
+  localStorage.setItem('token_key',user.token)
+  //将user保存到state中
+  commit(RECEIVE_USER,user)
+ },
+
+ /* 
+ 退出登陆
+ */
+ logout ({commit}) {
+   // 重置状态中的user
+   commit(RESET_USER)
+   // 清除local中保存的token
+   localStorage.removeItem('token_key')
+   // 清除cookie中的user_id
+   Cookies.remove('user_id')
+ }
 }

@@ -4,9 +4,9 @@
 import ajax from './ajax.js'
 const BASE = '/api'
 
-//获取定位
+//1.获取定位
 export const reqAddress = (latitude,longitude)=> ajax.get(`${BASE}/position/${latitude},${longitude}`)//先传维度，再传精度
-//获取食品分类了表
+//2.获取食品分类了表
 // export const reqCatorgorys = ()=> ajax.get(`/index_category`)
 
 export const reqCatorgorys = () => ajax({
@@ -22,5 +22,37 @@ export const reqShops = ({latitude,longitude}) => ajax({
   params:{
     latitude,
     longitude
+  }
+})
+
+
+//4.获取短信验证码
+export const reqMsmCode = (phone) => ajax({
+  method:'GET',
+  url:BASE+'/sendcode',
+  params:{
+    phone
+  }
+})
+
+
+//5.短信登录
+export const reqMsmLogin = (phone,code) => ajax({
+  method:'POST',
+  url:BASE+'/login_sms',
+  params:{
+    phone,
+    code
+  }
+})
+
+//6.用户名登录
+export const reqPwdLogin = ({name,pwd,captcha}) => ajax({
+  method:'POST',
+  url:BASE+'/login_sms',
+  params:{
+    name,
+    pwd,
+    captcha
   }
 })

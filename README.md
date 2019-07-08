@@ -122,6 +122,43 @@
     完成组件编码: 使用计算属性
 
 ## day03
+
+## 1. 使用vue-cli3
+    1). 创建项目
+        npm remove vue-cli -g
+        yarn global remove vue-cli
+        yarn global add @vue/cli
+        vue create gshop-client3
+    2). 打包运行
+        开发环境运行: yarn serve
+        生产环境打包运行: yarn run build  / serve dist
+    3). 下载
+        yarn add stylus stylus-loader -D
+        yarn add vue-router swiper axios
+    4). 拷贝相关源码, 并修改
+        src/*
+        static/css/reset.css
+        index.html
+    5). 解决相关问题
+        1). eslint检查提示的问题: package.json
+            "rules": {
+              "no-unused-vars": "off",
+              "no-console": "off"
+            },
+
+        2). 异常: You are using the runtime-only build of Vue where the template compiler is not available
+            原因: 默认引用的vue包是不带编译器的vue.runtime.esm.js, 而我们需要带编译器的版本:vue.esm.js
+            解决: 配置指定引用带编译器的版本:vue.esm.js   --vue.config.js
+                module.exports = {
+                  configureWebpack: {
+                    resolve: {
+                      alias: {
+                        'vue$': 'vue/dist/vue.esm.js'  // $代表精确匹配
+                      }
+                    }
+                  }
+                }
+
 ### 1. Login组件的纯前台交互功能 
     1). 切换2种登陆方式
     2). 手机号格式验证
@@ -129,4 +166,10 @@
     4). 切换密码的显示/隐藏
     5). 前台表单验证
 
-### 2. Login组件的前后台交互功能 
+### 2. Login组件的前后台交互功能
+    1). 一次性图形验证码
+    2). 一次性短信验证码
+    3).  手机号/验证码登陆
+    4). 用户名/密码/验证码登陆
+    5). 一定时间免登陆
+    6). 登陆的token(授权令牌)

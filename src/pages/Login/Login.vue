@@ -4,40 +4,48 @@
       <div class="login_header">
         <h2 class="login_logo">硅谷外卖</h2>
         <div class="login_header_title">
-          <a href="javascript:;" class="on">短信登录</a>
-          <a href="javascript:;" >密码登录</a>
+          <a href="javascript:;" :class="{on:isShowMsg}" @click="isShowMsg = true">短信登录</a>
+          <a href="javascript:;" :class="{on:!isShowMsg}" @click="isShowMsg = false">密码登录</a>
         </div>
       </div>
       <div class="login_content">
         <form>
-          <div class="on">
+          <div :class="{on:isShowMsg}">
             <section class="login_message">
-              <input type="tel" maxlength="11" placeholder="手机号">
-              <button disabled="disabled" class="get_verification" >获取验证码</button>
+              <input type="tel" maxlength="11" placeholder="手机号" v-model="phone">
+              <button :disabled="!isRightPhone || computeTime>0 " 
+                :class="isRightPhone?'get_verification right_phone_number':'get_verification'"
+                @click.prevent="sendCode" >
+                {{computeTime>0?`${computeTime}s获取验证码`:'获取验证码'}}</button>
             </section>
             <section class="login_verification">
-              <input type="tel" maxlength="8" placeholder="验证码">
+              <input type="text" maxlength="8" placeholder="验证码" v-model="code">
             </section>
             <section class="login_hint">
               温馨提示：未注册硅谷外卖帐号的手机号，登录时将自动注册，且代表已同意
               <a href="javascript:;">《用户服务协议》</a>
             </section>
           </div>
-          <div>
+          <div :class="{on:!isShowMsg}">
             <section>
               <section class="login_message">
-                <input type="tel" maxlength="11" placeholder="手机/邮箱/用户名">
+                <input type="text" maxlength="11" placeholder="手机/邮箱/用户名" v-model="name">
               </section>
               <section class="login_verification">
-                <input type="tel" maxlength="8" placeholder="密码">
-                <div class="switch_button off">
-                  <div class="switch_circle"></div>
-                  <span class="switch_text">...</span>
+                <input :type="isShowPwd?'text':'password'" maxlength="8" placeholder="密码" v-model="pwd">
+                <div class="switch_button" :class="isShowPwd?'on':'off'" @click="isShowPwd = !isShowPwd">
+                  <div class="switch_circle" :class="{right:isShowPwd}"></div>
+                  <span class="switch_text">{{isShowPwd?'abc':'...'}}</span>
                 </div>
+              </section>
+               <section class="login_message">
+                <input type="text" maxlength="11" placeholder="验证码" v-model="captcha">
+                <img class="get_verification" src="http://localhost:5000/captcha" alt="captcha"
+                 @click="updateCapcha" ref='captcha'> 
               </section>
             </section>
           </div>
-          <button class="login_submit">登录</button>
+          <button class="login_submit" @click.prevent="login">登录</button>
         </form>
         <a href="javascript:;" class="about_us">关于我们</a>
       </div>
@@ -49,7 +57,85 @@
 </template>
 
 <script type="text/ecmascript-6">
+  import {reqMsmCode,reqMsmLogin,reqPwdLogin} from '../../api'
   export default {
+    data(){
+      return {
+        isShowMsg:false,//为true为短信登录，false为用户名登录
+        phone:'',//手机号
+        code:'',//获取的短信验证码
+        name:'',//用户名
+        pwd:'',//用户密码
+        captcha:'',
+        // captcha,//图片验证码
+
+        computeTime: 0, // 计时剩余的时间, 为0时没有计时了
+        isShowPwd:false, //false密码不可见password off  空字符串 class没right      true密码可见text on，abc。。，right
+      }
+    },
+
+    /* 
+    发送请求及倒计时  
+    */
+    methods:{
+      
+      //请求短信倒计时
+      async sendCode(){
+        //设置最大时间
+        this.computeTime = 10
+        const timeId = setInterval(()=>{
+          this.computeTime--
+
+          if(this.computeTime===0){
+            clearInterval(timeId)
+          }
+        },1000)
+
+        const result = await reqMsmCode(this.phone)
+          if(result.code === 0){
+            alert('短信以成功发送')
+          } else {
+            alert(result.msg)
+          }
+
+
+      },
+
+      //点击图片进行get请求说白了动态改变请求路径
+      updateCapcha(){
+          this.$refs.captcha.src = 'http://localhost:5000/captcha?time=' + Date.now()
+      },
+      //点击---点击---点击----登录发送两种ajax请求登陆页面
+      async login(){
+        const { isShowMsg, phone, code, name, pwd, captcha } = this
+        let result
+          if(isShowMsg){
+            result = await reqMsmLogin(phone,code)
+            
+          } else {
+            result = await reqPwdLogin( {  name, pwd, captcha })
+          }
+
+          if(result.code === 0){
+            //将user信息保存到state中
+            const user = result.data
+            //分发actions保存user
+            this.$store.dispatch('recordUser',user)
+            //跳转我的页面
+            this.$router.push('/profile')
+          } else {
+            alert(result.msg)
+          }
+      }
+    },
+
+    computed:{
+      //是否是正确的手机号
+      isRightPhone(){
+        return /^1\d{10}$/.test(this.phone)
+      }
+    }
+
   }
 </script>
 
@@ -113,6 +199,8 @@
                 color #ccc
                 font-size 14px
                 background transparent
+                &.right_phone_number
+                  color black 
             .login_verification
               position relative
               margin-top 16px
@@ -152,6 +240,8 @@
                   background #fff
                   box-shadow 0 2px 4px 0 rgba(0,0,0,.1)
                   transition transform .3s
+                  &.right 
+                    transform translateX(27px)
             .login_hint
               margin-top 12px
               color #999

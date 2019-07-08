@@ -6,5 +6,6 @@ export default {
   longitude:'116.36868',//精度
   address:{},//定位地址
   categorys:[],//商品分类
-  shops:[]//商家列表
+  shops:[],//商家列表
+  user:{}//用户信息
 }

@@ -22,6 +22,9 @@
 //status: 200 请求状态码
 import axios from 'axios'
 import qs from 'qs'
+import store from '../vuex/store'
+import router from '../router'
+
 
 axios.defaults.timeout = 20000 //全局配置超时时间
 
@@ -34,6 +37,15 @@ axios.interceptors.request.use((config)=>{
   if(method.toLowerCase() ==='post'  && data && typeof data === 'object'){
     config.data = qs.stringify(data)
   }
+
+  //如果浏览器有token，就自动携带上token
+  const token = localStorage.getItem('token_key')
+
+  if (token) {
+    config.headers.Authorization = 'token ' + token
+  }
+
+
   return config
 })
 
@@ -42,10 +54,23 @@ axios.interceptors.response.use(responce =>{
   return responce.data
 },error =>{
   //统一处理异常
-  alert('错误异常'+ error.message)
+  //alert('错误异常'+ error.message)
   //正常他是抛出异常进入.catch 直接统抛出异常
   // return Promise.reject(error)
   // return error
+  const status = error.response.status
+  const msg = error.message
+  if (status === 401) { // 未授权
+    // 退出登陆
+    store.dispatch('logout')
+    router.replace('/login')
+    alert(error.response.data.message)
+  } else if (status === 404) {
+    alert('请求的资源不存在')
+  } else {
+    alert('请求异常: ' + msg)
+  }
+  
   return new Promise(()=>{}) //返回panding 状态 从而阻止后面的异常不处理
 })
 
